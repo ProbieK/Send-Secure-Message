@@ -1,0 +1,157 @@
+#!/bin/bash
+
+#Author: Joshua Kroger
+#https://github.com/ProbieK/
+
+clear
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+	if ! type "gpg2" > /dev/null 2>&1; then
+		echo "gpg2 not present"
+		echo "installing gpg2..."
+		sudo apt-get update
+		sudo apt-get install gpg2
+	else
+		echo "gpg2 is present!"
+	fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	if ! type "gpg2" > /dev/null 2>&1; then
+		echo "gpg2 is not present"
+			if ! type "brew" > /dev/null 2>&1; then
+				echo "Homebrew is not present"
+				echo "Please install Homebrew"
+				echo "or manually install gpg2."
+				echo "Then rerun this script." 
+				echo "https://gpgtools.org/"
+				echo "http://brew.sh/"
+				exit 0
+			else
+				echo "installing gpg2..."
+				sudo brew update
+				sudo brew install gpg2
+			fi
+	else
+		echo "gpg2 is present!"
+	fi
+fi
+
+#Download Joshua Kroger's Updated Public Key
+gpg2 --recv-keys 457FAFE0
+echo ""
+echo "Got the Key!"
+sleep 1
+
+function sendmessage {
+read -p "What is your name? (Leave blank for Anonymous)" USERNAME
+read -p "What is your email? (Required only if you want me to respond)" USEREMAIL
+#Message Box
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+	exec 3>&1;
+	result=$(dialog --ascii-lines --inputbox "Write your encrypted message below.\nTo add a newline to your output message,\ninsert a [BACKSLASH]n into your line." 10 50 2>&1 1>&3);
+	exitcode=$?;
+	exec 3>&-;
+	CTMESSAGE=$(echo $result);
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	echo "Write your message below:"
+	read -p "> " CTMESSAGE
+else
+	echo "Unsupported OS"
+	exit 0
+fi
+clear
+echo -e "\n-----\n$CTMESSAGE\n-----\n"
+read -p "Is this the message you would like to send? [Y/n]" customresponse
+	case $(echo ${customresponse:-Y}|tr '[:lower:]' '[:upper:]') in
+		Y) clear
+			echo -e "Message Below!\n"
+			echo -e "Name: $USERNAME\nEmail: $USEREMAIL\nMessage:\n$CTMESSAGE" | gpg2 -aer 457FAFE0
+			echo ""
+			read -sn 1 -p "Press any key to continue..."
+			;;
+		N) echo ""
+			echo -e "You said no"
+			read -sn 1 -p "Press any key to continue..."
+			;;
+	esac
+mainmenu
+}
+
+function sendfile {
+	if [[ "$OSTYPE" == "linux-gnu" ]]; then
+		echo "There will be a dialog popup that will help guide"
+		echo "you through selecting a file."
+		echo "At the bottom of the dialog, type in the full path"
+		echo "to the file you would like to encrypt."
+		echo "The dialog will update as you type the full path"
+		echo "in order to help you select the correct file."
+		echo "Please include the file name and extention in the path."
+		echo ""
+		read -sn 1 -p "Press any key to continue..."
+		exec 3>&1;
+		result=$(dialog --ascii-lines --fselect ~/ 10 50 2>&1 1>&3);
+		exitcode=$?;
+		exec 3>&-;
+		CTFILE=$(echo $result);
+	elif [[ "$OSTYPE" == "darwin"* ]]; then
+		echo -e "Enter path to file you'd like to encrypt [ENTER]: "
+		echo -e "This path needs to be reletave to the folder that"
+		echo -e "you executed the script from or an absolute path"
+		read -p "> " CTFILE
+	else
+		echo "You shouldn't be here..."
+	fi
+	if [ -f "$CTFILE" ]; then
+		gpg2 -e -r 457FAFE0 $CTFILE
+		clear
+		echo "New file created at path: "$CTFILE".gpg"
+		read -sn 1 -p "Press any key to continue..."
+		clear
+	else
+		clear
+		echo "File does not exist!"
+		read -sn 1 -p "Press any key to continue..."
+		clear
+	fi
+mainmenu
+}
+
+function keydetails {
+	echo ""
+	echo "Current Key Details for Joshua Kroger:"
+	echo ""
+	gpg2 --fingerprint 457FAFE0
+	echo ""
+	read -sn 1 -p "Press any key to continue..."
+	mainmenu
+}
+
+function mainmenu {
+clear
+select menu in "Send me a message" "Send me a file" "Show Key Details" "Exit Script"; do
+	case $menu in 
+		"Send me a message")
+		sendmessage
+		;;
+		
+		"Send me a file")
+		sendfile
+		;;
+		
+		"Show Key Details")
+		keydetails
+		;;
+		
+		"Exit Script")
+		clear
+		exit 0
+		;;
+		
+		*)
+		echo "Invalid Option"
+		sleep 1
+		mainmenu
+		;;
+	esac
+done
+}
+
+while true; do mainmenu; done
