@@ -20,7 +20,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 				echo "Homebrew is not present"
 				echo "Please install Homebrew"
 				echo "or manually install gpg2."
-				echo "Then rerun this script." 
+				echo "Then rerun this script."
 				echo "https://gpgtools.org/"
 				echo "http://brew.sh/"
 				exit 0
@@ -35,7 +35,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 #Download Joshua Kroger's Updated Public Key
-gpg2 --recv-keys 457FAFE0
+gpg2 --recv-keys B4FE697F3D38E888EAACCFF5C5F34DD7C6FBFD50
 echo ""
 echo "Got the Key!"
 sleep 1
@@ -63,7 +63,7 @@ read -p "Is this the message you would like to send? [Y/n]" customresponse
 	case $(echo ${customresponse:-Y}|tr '[:lower:]' '[:upper:]') in
 		Y) clear
 			echo -e "Message Below!\n"
-			echo -e "Name: $USERNAME\nEmail: $USEREMAIL\nMessage:\n$CTMESSAGE" | gpg2 -aer 457FAFE0
+			echo -e "Name: $USERNAME\nEmail: $USEREMAIL\nMessage:\n$CTMESSAGE" | gpg2 -aer B4FE697F3D38E888EAACCFF5C5F34DD7C6FBFD50
 			echo ""
 			read -sn 1 -p "Press any key to continue..."
 			;;
@@ -100,7 +100,7 @@ function sendfile {
 		echo "You shouldn't be here..."
 	fi
 	if [ -f "$CTFILE" ]; then
-		gpg2 -e -r 457FAFE0 $CTFILE
+		gpg2 -e -r B4FE697F3D38E888EAACCFF5C5F34DD7C6FBFD50 $CTFILE
 		clear
 		echo "New file created at path: "$CTFILE".gpg"
 		read -sn 1 -p "Press any key to continue..."
@@ -118,7 +118,7 @@ function keydetails {
 	echo ""
 	echo "Current Key Details for Joshua Kroger:"
 	echo ""
-	gpg2 --fingerprint 457FAFE0
+	gpg2 --fingerprint B4FE697F3D38E888EAACCFF5C5F34DD7C6FBFD50
 	echo ""
 	read -sn 1 -p "Press any key to continue..."
 	mainmenu
@@ -127,24 +127,24 @@ function keydetails {
 function mainmenu {
 clear
 select menu in "Send me a message" "Send me a file" "Show Key Details" "Exit Script"; do
-	case $menu in 
+	case $menu in
 		"Send me a message")
 		sendmessage
 		;;
-		
+
 		"Send me a file")
 		sendfile
 		;;
-		
+
 		"Show Key Details")
 		keydetails
 		;;
-		
+
 		"Exit Script")
 		clear
 		exit 0
 		;;
-		
+
 		*)
 		echo "Invalid Option"
 		sleep 1
